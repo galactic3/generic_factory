@@ -1,15 +1,21 @@
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::{near_bindgen};
+use near_sdk::{near_bindgen, PanicOnDefault};
 
 #[near_bindgen]
-#[derive(Default, BorshDeserialize, BorshSerialize)]
+#[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
 pub struct FactoryContract {
+    subject: String
 }
 
 #[near_bindgen]
 impl FactoryContract {
-    pub fn hello(&self) -> &str {
-        "Hello, world!"
+    #[init]
+    pub fn new(subject: String) -> Self {
+        Self { subject }
+    }
+
+    pub fn hello(&self) -> String {
+        format!("Hello, {}!", self.subject)
     }
 }
 
@@ -35,7 +41,7 @@ mod tests {
     fn test_hello() {
         let context = get_context();
         testing_env!(context);
-        let contract = FactoryContract::default();
+        let contract = FactoryContract::new("world".into());
         let res = contract.hello();
         assert_eq!(res, "Hello, world!");
     }
