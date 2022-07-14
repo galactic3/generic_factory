@@ -3,11 +3,11 @@ use near_sdk::{near_bindgen};
 
 #[near_bindgen]
 #[derive(Default, BorshDeserialize, BorshSerialize)]
-pub struct FactoryContract {
+pub struct HelloContract {
 }
 
 #[near_bindgen]
-impl FactoryContract {
+impl HelloContract {
     pub fn hello(&self) -> &str {
         "Hello, world!"
     }
@@ -35,7 +35,7 @@ mod tests {
     fn test_hello() {
         let context = get_context();
         testing_env!(context);
-        let contract = FactoryContract::default();
+        let contract = HelloContract::default();
         let res = contract.hello();
         assert_eq!(res, "Hello, world!");
     }

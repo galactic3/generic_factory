@@ -154,6 +154,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "example_contract"
+version = "0.0.1"
+dependencies = [
+ "near-sdk",
+]
+
+[[package]]
 name = "generic-array"
 version = "0.14.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -161,13 +168,6 @@ checksum = "501466ecc8a30d1d3b7fc9229b122b2ce8ed6e9d9223f1138d4babb253e51817"
 dependencies = [
  "typenum",
  "version_check",
-]
-
-[[package]]
-name = "generic_factory"
-version = "0.0.1"
-dependencies = [
- "near-sdk",
 ]
 
 [[package]]
