@@ -168,6 +168,7 @@ name = "generic_factory"
 version = "0.0.1"
 dependencies = [
  "near-sdk",
+ "near-sys",
 ]
 
 [[package]]
@@ -326,6 +327,12 @@ dependencies = [
  "quote",
  "syn",
 ]
+
+[[package]]
+name = "near-sys"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e307313276eaeced2ca95740b5639e1f3125b7c97f0a1151809d105f1aa8c6d3"
 
 [[package]]
 name = "near-vm-errors"
