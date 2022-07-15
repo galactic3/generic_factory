@@ -1,5 +1,6 @@
+use near_sdk::json_types::Base58CryptoHash;
 use near_sdk::serde_json::json;
-use near_sdk::{Balance, Gas};
+use near_sdk::{Balance, Gas, env};
 use near_sdk_sim::{init_simulator, to_yocto};
 
 near_sdk_sim::lazy_static_include::lazy_static_include_bytes! {
@@ -17,6 +18,12 @@ fn test_deploy_set_code_create_call() {
     // deploy works
     let factory = root.deploy(&FACTORY_BYTES, "factory".parse().unwrap(), to_yocto("10"));
     let user = root.create_user("user".into(), to_yocto("10"));
+
+    // code not set, code_hash is none
+    let res = root.view(factory.account_id(), "get_code_hash", &vec![]);
+    assert!(res.is_ok());
+    let res: Option<Base58CryptoHash> = res.unwrap_json();
+    assert!(res.is_none());
 
     // create should fail before set_code
     let res = user.call(
@@ -44,6 +51,12 @@ fn test_deploy_set_code_create_call() {
     // set_code by current_account_id fails second time
     let res = factory.call(factory.account_id(), "set_code", &HELLO_BYTES, SET_CODE_GAS, NO_DEPOSIT);
     assert!(!res.is_ok());
+
+    // code not set, code_hash is none
+    let res = root.view(factory.account_id(), "get_code_hash", &vec![]);
+    assert!(res.is_ok());
+    let res: Option<Base58CryptoHash> = res.unwrap_json();
+    assert!(res.is_some());
 
     // create by random user works
     let res = user.call(
@@ -73,4 +86,4 @@ fn test_deploy_set_code_create_call() {
 // - [DONE] check that anyone can create
 // - [DONE] check that create calls init with correct attributes
 // - [DONE] check that set_code cannot be called again
-// - [TODO] check that get_code_hash works
+// - [DONE] check that get_code_hash works

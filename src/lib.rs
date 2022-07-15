@@ -3,7 +3,7 @@ use std::str;
 
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::{near_bindgen, Promise, env, Gas};
-use near_sdk::json_types::ValidAccountId;
+use near_sdk::json_types::{ValidAccountId, Base58CryptoHash};
 
 const CREATE_GAS: Gas = 20 * 10u64.pow(12);
 
@@ -71,6 +71,16 @@ impl FactoryContract {
                 0,
                 env::prepaid_gas() - CREATE_GAS,
             )
+    }
+
+    pub fn get_code_hash(&self) -> Option<Base58CryptoHash> {
+        let code = env::storage_read(&"code".as_bytes());
+        if let Some(code) = code {
+            let result: [u8; 32] = env::sha256(&code).try_into().unwrap();
+            Some(result.into())
+        } else {
+            None
+        }
     }
 }
 
