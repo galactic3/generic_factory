@@ -77,6 +77,24 @@ fn test_deploy_set_code_create_call() {
     assert!(res.is_ok());
     let res: String = res.unwrap_json();
     assert_eq!(res, "Hello, world!");
+
+    // create by random user without init params
+    let res = user.call(
+        factory.account_id(),
+        "create",
+        &json!({
+            "name": "subaccount_without_args",
+        }).to_string().into_bytes(),
+        CREATE_GAS,
+        to_yocto("3"),
+    );
+    assert!(res.is_ok());
+
+    // init method was not called, subject is empty string
+    let res = root.view("subaccount_without_args.factory".into(), "hello", &vec![]);
+    assert!(res.is_ok());
+    let res: String = res.unwrap_json();
+    assert_eq!(res, "Hello, !");
 }
 
 // - [DONE] check that create fails before set_code

@@ -58,19 +58,27 @@ pub extern "C" fn set_code() {
 #[near_bindgen]
 impl FactoryContract {
     #[payable]
-    pub fn create(&mut self, name: String, init_function: String, init_args: String) -> Promise {
+    pub fn create(&mut self, name: String, init_function: Option<String>, init_args: Option<String>) -> Promise {
         let account_id: ValidAccountId = format!("{}.{}", name, env::current_account_id()).try_into().unwrap();
         let code = env::storage_read(&"code".as_bytes()).expect("code not set, call set_code first");
-        Promise::new(account_id.into())
+        let promise = Promise::new(account_id.into())
             .create_account()
             .transfer(env::attached_deposit())
-            .deploy_contract(code)
-            .function_call(
-                init_function.into_bytes(),
-                init_args.into_bytes(),
+            .deploy_contract(code);
+
+        if init_function.is_some() && init_args.is_some() {
+            promise.function_call(
+                init_function.unwrap().into_bytes(),
+                init_args.unwrap().into_bytes(),
                 0,
                 env::prepaid_gas() - CREATE_GAS,
             )
+        } else {
+            if init_function.is_some() || init_args.is_some() {
+                panic!("expected both init_function and init_args")
+            }
+            promise
+        }
     }
 
     pub fn get_code_hash(&self) -> Option<Base58CryptoHash> {
