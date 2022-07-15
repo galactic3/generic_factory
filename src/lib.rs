@@ -1,8 +1,10 @@
 use std::convert::TryInto;
 
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::{near_bindgen, Promise, env};
+use near_sdk::{near_bindgen, Promise, env, Gas};
 use near_sdk::json_types::ValidAccountId;
+
+const CREATE_GAS: Gas = 20 * 10u64.pow(12);
 
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize, Default)]
@@ -29,15 +31,19 @@ pub extern "C" fn set_code() {
 #[near_bindgen]
 impl FactoryContract {
     #[payable]
-    pub fn create(&mut self, subaccount: String) -> Promise {
-        let account_id: ValidAccountId = format!("{}.{}", subaccount, env::current_account_id()).try_into().unwrap();
-
+    pub fn create(&mut self, name: String, init_function: String, init_args: String) -> Promise {
+        let account_id: ValidAccountId = format!("{}.{}", name, env::current_account_id()).try_into().unwrap();
         let code = env::storage_read(&"code".as_bytes()).unwrap();
-
         Promise::new(account_id.into())
             .create_account()
             .transfer(env::attached_deposit())
             .deploy_contract(code)
+            .function_call(
+                init_function.into_bytes(),
+                init_args.into_bytes(),
+                0,
+                env::prepaid_gas() - CREATE_GAS,
+            )
     }
 }
 
