@@ -1,6 +1,6 @@
 use near_sdk::json_types::Base58CryptoHash;
 use near_sdk::serde_json::json;
-use near_sdk::{Balance, Gas, env};
+use near_sdk::{Balance, Gas};
 use near_sdk_sim::{init_simulator, to_yocto};
 
 near_sdk_sim::lazy_static_include::lazy_static_include_bytes! {
@@ -59,6 +59,7 @@ fn test_deploy_set_code_create_call() {
     assert!(res.is_some());
 
     // create by random user works
+    let factory_balance_before = factory.account().unwrap().amount;
     let res = user.call(
         factory.account_id(),
         "create",
@@ -71,6 +72,51 @@ fn test_deploy_set_code_create_call() {
         to_yocto("5"),
     );
     assert!(res.is_ok());
+    let factory_balance_after = factory.account().unwrap().amount;
+    assert!(factory_balance_after >= factory_balance_before, "expected factory balance to not decrease");
+
+    // creating again for the same account name should fail and return the money
+    let factory_balance_before = factory.account().unwrap().amount;
+    let amount_before = user.account().unwrap().amount;
+    let res = user.call(
+        factory.account_id(),
+        "create",
+        &json!({
+            "name": "subaccount",
+            "init_function": "new",
+            "init_args": json!({ "subject": "world" }).to_string(),
+        }).to_string().into_bytes(),
+        CREATE_GAS,
+        to_yocto("3"),
+    );
+    assert!(res.is_ok());
+    let amount_after = user.account().unwrap().amount;
+    assert!(amount_after + to_yocto("0.01") >= amount_before, "expected attached deposit to be returned");
+    let factory_balance_after = factory.account().unwrap().amount;
+    assert!(factory_balance_after >= factory_balance_before, "expected factory balance to not decrease");
+
+    // create should revert if init method fails
+    let factory_balance_before = factory.account().unwrap().amount;
+    let amount_before = user.account().unwrap().amount;
+    let res = user.call(
+        factory.account_id(),
+        "create",
+        &json!({
+            "name": "subaccount_invalid_arg",
+            "init_function": "new",
+            "init_args": json!({ "not_the_expected_arg": "world" }).to_string(),
+        }).to_string().into_bytes(),
+        CREATE_GAS,
+        to_yocto("3"),
+    );
+    assert!(res.is_ok());
+    let amount_after = user.account().unwrap().amount;
+    assert!(amount_after + to_yocto("0.01") >= amount_before, "expected attached deposit to be returned");
+    // check that new account is indeed not created
+    let subaccount = root.borrow_runtime().view_account("subaccount_invalid_arg.factory");
+    assert!(subaccount.is_none(), "expected subaccount to not be created");
+    let factory_balance_after = factory.account().unwrap().amount;
+    assert!(factory_balance_after >= factory_balance_before, "expected factory balance to not decrease");
 
     // init method was called with the correct args
     let res = root.view("subaccount.factory".into(), "hello", &vec![]);
@@ -105,3 +151,7 @@ fn test_deploy_set_code_create_call() {
 // - [DONE] check that create calls init with correct attributes
 // - [DONE] check that set_code cannot be called again
 // - [DONE] check that get_code_hash works
+// - [DONE] check that create with the same account cannot be called again
+// - [DONE] check that failed create does not decrease factory's balance
+// - [DONE] check that successful create does not decrease factory's balance
+// - [DONE] check that failed create does not decrease caller's balance significantly
