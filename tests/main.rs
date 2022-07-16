@@ -33,7 +33,9 @@ fn test_deploy_set_code_create_call() {
             "name": "subaccount",
             "init_function": "new",
             "init_args": json!({ "subject": "world" }).to_string(),
-        }).to_string().into_bytes(),
+        })
+        .to_string()
+        .into_bytes(),
         CREATE_GAS,
         to_yocto("5"),
     );
@@ -41,15 +43,33 @@ fn test_deploy_set_code_create_call() {
     assert!(format!("{:?}", res.status()).contains("code not set, call set_code first"));
 
     // set_code by not current_account_id fails
-    let res = user.call(factory.account_id(), "set_code", &HELLO_BYTES, SET_CODE_GAS, NO_DEPOSIT);
+    let res = user.call(
+        factory.account_id(),
+        "set_code",
+        &HELLO_BYTES,
+        SET_CODE_GAS,
+        NO_DEPOSIT,
+    );
     assert!(!res.is_ok());
 
     // set_code by current_account_id succeeds
-    let res = factory.call(factory.account_id(), "set_code", &HELLO_BYTES, SET_CODE_GAS, NO_DEPOSIT);
+    let res = factory.call(
+        factory.account_id(),
+        "set_code",
+        &HELLO_BYTES,
+        SET_CODE_GAS,
+        NO_DEPOSIT,
+    );
     assert!(res.is_ok());
 
     // set_code by current_account_id fails second time
-    let res = factory.call(factory.account_id(), "set_code", &HELLO_BYTES, SET_CODE_GAS, NO_DEPOSIT);
+    let res = factory.call(
+        factory.account_id(),
+        "set_code",
+        &HELLO_BYTES,
+        SET_CODE_GAS,
+        NO_DEPOSIT,
+    );
     assert!(!res.is_ok());
 
     // code not set, code_hash is none
@@ -67,7 +87,9 @@ fn test_deploy_set_code_create_call() {
             "name": "subaccount",
             "init_function": "new",
             "init_args": json!({ "subject": "world" }).to_string(),
-        }).to_string().into_bytes(),
+        })
+        .to_string()
+        .into_bytes(),
         CREATE_GAS,
         to_yocto("5"),
     );
@@ -75,10 +97,16 @@ fn test_deploy_set_code_create_call() {
     let res: bool = res.unwrap_json();
     assert_eq!(res, true, "expected create to return true");
     let subaccount = root.borrow_runtime().view_account("subaccount.factory");
-    assert!(subaccount.unwrap().amount >= to_yocto("5"), "expected all deposit to be sent to subaccount");
+    assert!(
+        subaccount.unwrap().amount >= to_yocto("5"),
+        "expected all deposit to be sent to subaccount"
+    );
 
     let factory_balance_after = factory.account().unwrap().amount;
-    assert!(factory_balance_after >= factory_balance_before, "expected factory balance to not decrease");
+    assert!(
+        factory_balance_after >= factory_balance_before,
+        "expected factory balance to not decrease"
+    );
 
     // creating again for the same account name should fail and return the money
     let factory_balance_before = factory.account().unwrap().amount;
@@ -90,7 +118,9 @@ fn test_deploy_set_code_create_call() {
             "name": "subaccount",
             "init_function": "new",
             "init_args": json!({ "subject": "world" }).to_string(),
-        }).to_string().into_bytes(),
+        })
+        .to_string()
+        .into_bytes(),
         CREATE_GAS,
         to_yocto("3"),
     );
@@ -98,9 +128,15 @@ fn test_deploy_set_code_create_call() {
     let res: bool = res.unwrap_json();
     assert_eq!(res, false, "expected create to return false");
     let amount_after = user.account().unwrap().amount;
-    assert!(amount_after + to_yocto("0.01") >= amount_before, "expected attached deposit to be returned");
+    assert!(
+        amount_after + to_yocto("0.01") >= amount_before,
+        "expected attached deposit to be returned"
+    );
     let factory_balance_after = factory.account().unwrap().amount;
-    assert!(factory_balance_after >= factory_balance_before, "expected factory balance to not decrease");
+    assert!(
+        factory_balance_after >= factory_balance_before,
+        "expected factory balance to not decrease"
+    );
 
     // create should revert if init method fails
     let factory_balance_before = factory.account().unwrap().amount;
@@ -112,7 +148,9 @@ fn test_deploy_set_code_create_call() {
             "name": "subaccount_invalid_arg",
             "init_function": "new",
             "init_args": json!({ "not_the_expected_arg": "world" }).to_string(),
-        }).to_string().into_bytes(),
+        })
+        .to_string()
+        .into_bytes(),
         CREATE_GAS,
         to_yocto("3"),
     );
@@ -120,12 +158,23 @@ fn test_deploy_set_code_create_call() {
     let res: bool = res.unwrap_json();
     assert_eq!(res, false, "expected create to return false");
     let amount_after = user.account().unwrap().amount;
-    assert!(amount_after + to_yocto("0.01") >= amount_before, "expected attached deposit to be returned");
+    assert!(
+        amount_after + to_yocto("0.01") >= amount_before,
+        "expected attached deposit to be returned"
+    );
     // check that new account is indeed not created
-    let subaccount = root.borrow_runtime().view_account("subaccount_invalid_arg.factory");
-    assert!(subaccount.is_none(), "expected subaccount to not be created");
+    let subaccount = root
+        .borrow_runtime()
+        .view_account("subaccount_invalid_arg.factory");
+    assert!(
+        subaccount.is_none(),
+        "expected subaccount to not be created"
+    );
     let factory_balance_after = factory.account().unwrap().amount;
-    assert!(factory_balance_after >= factory_balance_before, "expected factory balance to not decrease");
+    assert!(
+        factory_balance_after >= factory_balance_before,
+        "expected factory balance to not decrease"
+    );
 
     // init method was called with the correct args
     let res = root.view("subaccount.factory".into(), "hello", &vec![]);
@@ -139,7 +188,9 @@ fn test_deploy_set_code_create_call() {
         "create",
         &json!({
             "name": "subaccount_without_args",
-        }).to_string().into_bytes(),
+        })
+        .to_string()
+        .into_bytes(),
         CREATE_GAS,
         to_yocto("3"),
     );
