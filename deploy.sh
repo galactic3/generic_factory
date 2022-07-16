@@ -12,7 +12,7 @@ WASM_FILE=$2
 echo "ACC_ROOT=$ACC_ROOT"
 echo "WASM_FILE=$WASM_FILE"
 
-near deploy -f --accountId $ACC_ROOT --wasmFile res/generic_factory.wasm
+near deploy -f --accountId $ACC_ROOT --wasmFile "$(dirname $0)/res/generic_factory.wasm"
 
 script=$(cat <<EOF
 const main = async () => {
@@ -36,3 +36,5 @@ EOF
 )
 
 echo "$script" | near repl
+
+exit 1
