@@ -72,6 +72,11 @@ fn test_deploy_set_code_create_call() {
         to_yocto("5"),
     );
     assert!(res.is_ok());
+    let res: bool = res.unwrap_json();
+    assert_eq!(res, true, "expected create to return true");
+    let subaccount = root.borrow_runtime().view_account("subaccount.factory");
+    assert!(subaccount.unwrap().amount >= to_yocto("5"), "expected all deposit to be sent to subaccount");
+
     let factory_balance_after = factory.account().unwrap().amount;
     assert!(factory_balance_after >= factory_balance_before, "expected factory balance to not decrease");
 
@@ -90,6 +95,8 @@ fn test_deploy_set_code_create_call() {
         to_yocto("3"),
     );
     assert!(res.is_ok());
+    let res: bool = res.unwrap_json();
+    assert_eq!(res, false, "expected create to return false");
     let amount_after = user.account().unwrap().amount;
     assert!(amount_after + to_yocto("0.01") >= amount_before, "expected attached deposit to be returned");
     let factory_balance_after = factory.account().unwrap().amount;
@@ -110,6 +117,8 @@ fn test_deploy_set_code_create_call() {
         to_yocto("3"),
     );
     assert!(res.is_ok());
+    let res: bool = res.unwrap_json();
+    assert_eq!(res, false, "expected create to return false");
     let amount_after = user.account().unwrap().amount;
     assert!(amount_after + to_yocto("0.01") >= amount_before, "expected attached deposit to be returned");
     // check that new account is indeed not created
@@ -151,7 +160,7 @@ fn test_deploy_set_code_create_call() {
 // - [DONE] check that create calls init with correct attributes
 // - [DONE] check that set_code cannot be called again
 // - [DONE] check that get_code_hash works
-// - [DONE] check that create with the same account cannot be called again
+// - [DONE] check that create forwards all deposited amount to the subaccount
 // - [DONE] check that failed create does not decrease factory's balance
 // - [DONE] check that successful create does not decrease factory's balance
 // - [DONE] check that failed create does not decrease caller's balance significantly

@@ -65,15 +65,15 @@ pub extern "C" fn set_code() {
 #[near_bindgen]
 impl FactoryContract {
     #[private]
-    pub fn after_create(account_id: ValidAccountId, amount: WrappedBalance) -> PromiseOrValue<bool> {
+    pub fn after_create(account_id: ValidAccountId, amount: WrappedBalance) -> bool {
         let promise_success = is_promise_success();
         if promise_success {
             log!("Subcontract successfully created!");
-            PromiseOrValue::Value(true)
+            true
         } else {
             log!("Subcontract creation failed, refunding {} to {}!", amount.0, account_id);
-            let promise = Promise::new(account_id.into()).transfer(amount.0);
-            PromiseOrValue::Promise(promise)
+            Promise::new(account_id.into()).transfer(amount.0);
+            false
         }
     }
 
