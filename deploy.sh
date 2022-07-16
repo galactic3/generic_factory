@@ -36,5 +36,3 @@ EOF
 )
 
 echo "$script" | near repl
-
-exit 1
