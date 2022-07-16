@@ -61,6 +61,8 @@ fn test_deploy_set_code_create_call() {
         NO_DEPOSIT,
     );
     assert!(res.is_ok());
+    let res: bool = res.unwrap_json();
+    assert_eq!(res, true, "expected set_code to return true");
 
     // set_code by current_account_id fails second time
     let res = factory.call(

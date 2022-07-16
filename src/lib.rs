@@ -3,7 +3,9 @@ use std::str;
 
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::json_types::{Base58CryptoHash, ValidAccountId, WrappedBalance};
-use near_sdk::{env, ext_contract, is_promise_success, log, near_bindgen, Balance, Gas, Promise};
+use near_sdk::{
+    env, ext_contract, is_promise_success, log, near_bindgen, AccountId, Balance, Gas, Promise,
+};
 
 const BEFORE_CREATE_GAS: Gas = 30 * 10u64.pow(12);
 const AFTER_CREATE_GAS: Gas = 10 * 10u64.pow(12);
@@ -15,7 +17,7 @@ pub struct FactoryContract {}
 
 #[ext_contract(ext_self)]
 pub trait ExtSelf {
-    fn after_create(&mut self, account_id: ValidAccountId, amount: WrappedBalance);
+    fn after_create(&mut self, account_id: AccountId, amount: WrappedBalance);
 }
 
 unsafe fn read_register_as_string(register_id: u64) -> String {
@@ -42,8 +44,6 @@ pub extern "C" fn set_code() {
             "expected current_account_id as caller",
         );
 
-        // save input to internal register
-        near_sys::input(0);
         // set key
         let key = "code".as_bytes();
         near_sys::write_register(1, key.len() as u64, key.as_ptr() as u64);
@@ -51,9 +51,11 @@ pub extern "C" fn set_code() {
         assert_eq!(
             near_sys::storage_has_key(u64::MAX as _, 1 as _),
             0,
-            "set_code has already been called"
+            "set_code has already been called",
         );
 
+        // save code to the internal register
+        near_sys::input(0);
         // save code to the state
         near_sys::storage_write(u64::MAX as _, 1 as _, u64::MAX as _, 0 as _, 2);
         // return true
@@ -65,13 +67,10 @@ pub extern "C" fn set_code() {
 #[near_bindgen]
 impl FactoryContract {
     pub fn get_code_hash(&self) -> Option<Base58CryptoHash> {
-        let code = env::storage_read(&"code".as_bytes());
-        if let Some(code) = code {
+        env::storage_read(&"code".as_bytes()).map(|code| {
             let result: [u8; 32] = env::sha256(&code).try_into().unwrap();
-            Some(result.into())
-        } else {
-            None
-        }
+            result.into()
+        })
     }
 
     #[payable]
@@ -110,7 +109,7 @@ impl FactoryContract {
         };
 
         promise.then(ext_self::after_create(
-            env::predecessor_account_id().try_into().unwrap(),
+            env::predecessor_account_id(),
             env::attached_deposit().into(),
             &env::current_account_id(),
             NO_DEPOSIT,
@@ -119,7 +118,7 @@ impl FactoryContract {
     }
 
     #[private]
-    pub fn after_create(account_id: ValidAccountId, amount: WrappedBalance) -> bool {
+    pub fn after_create(account_id: AccountId, amount: WrappedBalance) -> bool {
         let promise_success = is_promise_success();
         if promise_success {
             log!("Subcontract successfully created!");
@@ -128,9 +127,9 @@ impl FactoryContract {
             log!(
                 "Subcontract creation failed, refunding {} to {}!",
                 amount.0,
-                account_id
+                account_id,
             );
-            Promise::new(account_id.into()).transfer(amount.0);
+            Promise::new(account_id).transfer(amount.0);
             false
         }
     }
