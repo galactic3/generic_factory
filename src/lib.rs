@@ -18,23 +18,23 @@ pub trait ExtSelf {
     fn after_create(&mut self, account_id: ValidAccountId, amount: WrappedBalance);
 }
 
+unsafe fn read_register_as_string(register_id: u64) -> String {
+    let len = near_sys::register_len(register_id);
+    assert_ne!(len, u64::MAX, "register is not used");
+    let res = vec![0u8; len as usize];
+    near_sys::read_register(register_id, res.as_ptr() as _);
+    str::from_utf8(&res).unwrap().to_string()
+}
+
 #[no_mangle]
 pub extern "C" fn set_code() {
     env::setup_panic_hook();
 
     unsafe {
         near_sys::current_account_id(0);
-        let mut current_account_id: Vec<u8> = vec![];
-        current_account_id.resize(near_sys::register_len(0) as _, 0);
-        near_sys::read_register(0, current_account_id.as_ptr() as _);
-        let current_account_id: &str = str::from_utf8(&current_account_id).unwrap();
-
+        let current_account_id: String = read_register_as_string(0);
         near_sys::predecessor_account_id(0);
-        let mut predecessor_account_id: Vec<u8> = vec![];
-        predecessor_account_id.resize(near_sys::register_len(0) as _, 0);
-        near_sys::read_register(0, predecessor_account_id.as_ptr() as _);
-        let predecessor_account_id: &str = str::from_utf8(&predecessor_account_id).unwrap();
-
+        let predecessor_account_id: String = read_register_as_string(0);
         // FIXME: Using env::current_account_id(), env::predecessor_account_id() fails with
         // WebAssembly trap: An `unreachable` opcode was executed.
         assert_eq!(
