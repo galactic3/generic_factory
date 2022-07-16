@@ -2,11 +2,11 @@ use std::convert::TryInto;
 use std::str;
 
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::{near_bindgen, Promise, env, Gas, is_promise_success, log, ext_contract, Balance, PromiseOrValue};
+use near_sdk::{near_bindgen, Promise, env, Gas, is_promise_success, log, ext_contract, Balance};
 use near_sdk::json_types::{ValidAccountId, Base58CryptoHash, WrappedBalance};
 
 const BEFORE_CREATE_GAS: Gas = 30 * 10u64.pow(12);
-const AFTER_CREATE_GAS: Gas = 30 * 10u64.pow(12);
+const AFTER_CREATE_GAS: Gas = 10 * 10u64.pow(12);
 const NO_DEPOSIT: Balance = 0;
 
 #[near_bindgen]
@@ -86,6 +86,7 @@ impl FactoryContract {
             .deploy_contract(code)
             .transfer(env::attached_deposit());
 
+        assert!(env::prepaid_gas() >= BEFORE_CREATE_GAS + AFTER_CREATE_GAS, "not enough gas");
         let promise = if init_function.is_some() && init_args.is_some() {
             promise.function_call(
                 init_function.unwrap().into_bytes(),

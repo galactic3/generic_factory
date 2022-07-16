@@ -8,8 +8,8 @@ near_sdk_sim::lazy_static_include::lazy_static_include_bytes! {
     HELLO_BYTES => "res/hello_contract.wasm",
 }
 
-const SET_CODE_GAS: Gas = 300 * 10u64.pow(12);
-const CREATE_GAS: Gas = 300 * 10u64.pow(12);
+const SET_CODE_GAS: Gas = 30 * 10u64.pow(12);
+const CREATE_GAS: Gas = 60 * 10u64.pow(12);
 const NO_DEPOSIT: Balance = 0;
 
 #[test]
