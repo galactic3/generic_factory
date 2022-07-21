@@ -7,7 +7,6 @@ use near_sdk::{
     env, ext_contract, is_promise_success, log, near_bindgen, AccountId, Balance, Gas, Promise,
 };
 
-const MIN_GAS: Gas = 1 * 10u64.pow(12);
 const AFTER_CREATE_GAS: Gas = 10 * 10u64.pow(12);
 const NO_DEPOSIT: Balance = 0;
 
@@ -90,19 +89,14 @@ impl FactoryContract {
             .deploy_contract(code)
             .transfer(env::attached_deposit());
 
-        assert!(
-            env::prepaid_gas() >= AFTER_CREATE_GAS,
-            "not enough gas"
-        );
+        assert!(env::prepaid_gas() >= AFTER_CREATE_GAS, "not enough gas");
         let promise = if init_function.is_some() && init_args.is_some() {
             promise.function_call(
                 init_function.unwrap().into_bytes(),
                 init_args.unwrap().into_bytes(),
                 NO_DEPOSIT,
-                // this value is not checked when the init method is executed
-                // but it is subtracted from gas available to the current method
-                // setting to a low value value
-                MIN_GAS,
+                // chosen empirically as the best value
+                (env::prepaid_gas() - AFTER_CREATE_GAS) / 2,
             )
         } else {
             if init_function.is_some() || init_args.is_some() {
