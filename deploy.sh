@@ -22,10 +22,10 @@ const main = async () => {
   const account = await near.account(accountId);
   const code = fs.readFileSync("$WASM_FILE");
 
-  const result = await account.signAndSendTransaction(
-    contractName,
-    [nearAPI.transactions.functionCall("set_code", code, 300_000_000_000_000, "0")]
-  );
+  const result = await account.signAndSendTransaction({
+    receiverId: contractName,
+    actions: [nearAPI.transactions.functionCall("set_code", code, 300_000_000_000_000, "0")]
+  });
   console.log(result);
   console.log(JSON.parse(atob(result.receipts_outcome[0].outcome.status.SuccessValue)));
   console.log('TxHash: ' + result.transaction.hash);
